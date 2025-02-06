@@ -1,0 +1,999 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Floor Planner</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+          "Helvetica Neue", Arial, sans-serif;
+        height: 100vh;
+        overflow: hidden;
+      }
+
+      .container {
+        height: 100vh;
+        display: flex;
+        flex-direction: column;
+      }
+
+      .header {
+        height: 56px;
+        border-bottom: 1px solid #e5e7eb;
+        display: flex;
+        align-items: center;
+        padding: 0 16px;
+        background: white;
+      }
+
+      .title {
+        font-size: 20px;
+        font-weight: 600;
+        margin-right: 16px;
+      }
+
+      .toolbar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .divider {
+        width: 1px;
+        height: 24px;
+        background: #e5e7eb;
+        margin: 0 8px;
+      }
+
+      .btn {
+        padding: 8px;
+        border-radius: 4px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        color: #374151;
+      }
+
+      .btn:hover {
+        background: #f3f4f6;
+      }
+
+      .btn.active {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .main {
+        flex: 1;
+        display: flex;
+        overflow: hidden;
+      }
+
+      .sidebar {
+        width: 256px;
+        border-right: 1px solid #e5e7eb;
+        background: white;
+        padding: 16px;
+      }
+
+      .sidebar-right {
+        position: relative;
+        z-index: 10;
+        width: 256px;
+        border-left: 1px solid #e5e7eb;
+        background: white;
+        padding: 16px;
+      }
+
+      .sidebar-title {
+        font-weight: 500;
+        margin-bottom: 8px;
+        color: #374151;
+      }
+
+      .sidebar-btn {
+        width: 100%;
+        text-align: left;
+        padding: 8px 12px;
+        border-radius: 4px;
+        border: none;
+        background: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 4px;
+        color: #374151;
+      }
+
+      .sidebar-btn:hover {
+        background: #f3f4f6;
+      }
+
+      .sidebar-btn.active {
+        background: #dbeafe;
+        color: #1d4ed8;
+      }
+
+      .canvas-container {
+        flex: 1;
+        background: #f9fafb;
+        position: relative;
+      }
+
+      #canvas {
+        position: absolute;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+      }
+
+      .zoom-input {
+        width: 100%;
+        padding: 6px 8px;
+        border: 1px solid #e5e7eb;
+        border-radius: 4px;
+        margin-top: 4px;
+      }
+
+      .input-label {
+        display: block;
+        font-size: 14px;
+        color: #6b7280;
+        margin-bottom: 4px;
+      }
+
+      #resetZoom {
+        display: none;
+      }
+    </style>
+  </head>
+
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1 class="title">Floor Planner</h1>
+        <div class="toolbar">
+          <div class="divider"></div>
+          <button class="btn" id="zoomIn" title="Zoom In">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.3-4.3" />
+              <path d="M11 8v6M8 11h6" />
+            </svg>
+          </button>
+          <button class="btn" id="zoomOut" title="Zoom Out">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <circle cx="11" cy="11" r="8" />
+              <path d="M21 21l-4.3-4.3" />
+              <path d="M8 11h6" />
+            </svg>
+          </button>
+          <span id="zoomLevel" style="font-size: 14px; color: #6b7280"
+            >100%</span
+          >
+          <button class="btn" id="resetZoom" title="Reset Zoom">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <g
+                fill="none"
+                fill-rule="evenodd"
+                stroke="currentColor"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+                transform="matrix(0 1 1 0 2.5 2.5)"
+              >
+                <path
+                  d="m3.98652376 1.07807068c-2.38377179 1.38514556-3.98652376 3.96636605-3.98652376 6.92192932 0 4.418278 3.581722 8 8 8s8-3.581722 8-8-3.581722-8-8-8"
+                />
+                <path d="m4 1v4h-4" transform="matrix(1 0 0 -1 0 6)" />
+              </g>
+            </svg>
+          </button>
+          <div class="divider"></div>
+        </div>
+      </div>
+      <div class="main">
+        <div class="sidebar">
+          <div class="sidebar-title">Tools</div>
+          <button class="sidebar-btn" id="wallToolSidebar">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <rect width="18" height="18" x="3" y="3" rx="2" />
+            </svg>
+            Wall Tool
+          </button>
+          <button class="sidebar-btn" id="moveToolSidebar">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M5 9l-3 3 3 3M9 5l3-3 3 3M15 19l-3 3-3-3M19 9l3 3-3 3M2 12h20M12 2v20"
+              />
+            </svg>
+            Move Tool
+          </button>
+          <button class="sidebar-btn" id="removeWallSidebar">
+            <svg
+              width="16"
+              height="16"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
+              <path
+                d="M3 6h18M8 6v12M16 6v12M5 6v12c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V6M9 6v12M15 6v12"
+              />
+            </svg>
+            Remove Wall
+          </button>
+        </div>
+        <div class="canvas-container">
+          <canvas id="canvas"></canvas>
+        </div>
+        <div class="sidebar-right">
+          <div id="sidebarTitle"></div>
+          <div id="wallProperties" style="display: none">
+            <label class="input-label">Start (X, Y):</label>
+            <input type="text" id="startCoordsX" class="zoom-input" />
+            <input type="text" id="startCoordsY" class="zoom-input" />
+
+            <label class="input-label">End (X, Y):</label>
+            <input type="text" id="endCoordsX" class="zoom-input" />
+            <input type="text" id="endCoordsY" class="zoom-input" />
+
+            <label class="input-label">Length:</label>
+            <input type="text" id="wallLength" class="zoom-input" readonly />
+
+            <label class="input-label">Color:</label>
+            <input type="color" id="wallColor" class="zoom-input" />
+
+            <label class="input-label">Thickness:</label>
+            <input
+              type="number"
+              id="wallThickness"
+              class="zoom-input"
+              min="1"
+              max="10"
+              step="1"
+            />
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <script>
+      //#region console.log()
+
+      var debug = true;
+
+      const originalConsoleLog = console.log;
+      console.log = function (...args) {
+        if (debug) {
+          originalConsoleLog.apply(console, args);
+        }
+      };
+
+      //#endregion
+
+      const canvas = document.getElementById("canvas");
+      const ctx = canvas.getContext("2d");
+
+      // State variables
+      let isDrawing = false;
+      let isDragging = false;
+      let walls = [];
+      let currentWall = null;
+      let selectedWall = null;
+      let gridSize = 20;
+      let zoom = 1;
+      let offset = { x: 0, y: 0 };
+      let selectedTool = null;
+      let lastMousePos = { x: 0, y: 0 };
+      let isAltPressed = false;
+      let nearestEndpoint = null;
+      let isMovingWall = false;
+      let snapPoints = { start: null, end: null };
+      const ENDPOINT_SNAP_THRESHOLD = 15;
+      let connections = new Map(); // Store wall connections
+      let processedWalls = new Set(); // Prevent infinite recursion
+
+      // Initialize canvas size
+      function resizeCanvas() {
+        const container = canvas.parentElement;
+        canvas.width = container.clientWidth;
+        canvas.height = container.clientHeight;
+        drawCanvas();
+      }
+
+      // Set up event listeners
+      window.addEventListener("load", () => {
+        resizeCanvas();
+        window.addEventListener("resize", resizeCanvas);
+      });
+
+      // Tool selection handlers
+      document
+        .getElementById("wallToolSidebar")
+        .addEventListener("click", () => handleToolClick("wall"));
+      document
+        .getElementById("moveToolSidebar")
+        .addEventListener("click", () => handleToolClick("move"));
+      document
+        .getElementById("removeWallSidebar")
+        .addEventListener("click", () => handleToolClick("remove"));
+
+      // Zoom handlers
+      document
+        .getElementById("zoomIn")
+        .addEventListener("click", () => handleZoom(1.1));
+      document
+        .getElementById("zoomOut")
+        .addEventListener("click", () => handleZoom(0.9));
+      document
+        .getElementById("resetZoom")
+        .addEventListener("click", handleResetZoom);
+
+      // Keyboard handlers
+      window.addEventListener("keydown", (e) => {
+        if (e.key === "Alt") {
+          e.preventDefault();
+          isAltPressed = true;
+        }
+      });
+
+      window.addEventListener("keyup", (e) => {
+        if (e.key === "Alt") {
+          isAltPressed = false;
+          nearestEndpoint = null;
+          drawCanvas();
+        }
+      });
+
+      // Canvas event handlers
+      canvas.addEventListener("mousedown", handleMouseDown);
+      canvas.addEventListener("mousemove", handleMouseMove);
+      canvas.addEventListener("mouseup", handleMouseUp);
+      canvas.addEventListener("mouseleave", handleMouseLeave);
+      canvas.addEventListener("wheel", handleWheel);
+
+      function handleToolClick(tool) {
+        selectedTool = selectedTool === tool ? null : tool;
+        selectedWall = null;
+        hideWallProperties();
+        updateToolbarUI();
+        updateCursor();
+      }
+
+      function handleRemoveWall(e) {
+        if (selectedTool !== "remove") return;
+
+        const point = getCanvasPoint(e.clientX, e.clientY);
+        const wallToRemove = findWallAtPoint(point);
+
+        if (wallToRemove) {
+          if (confirm("Are you sure you want to remove this wall?")) {
+            const wallIndex = walls.indexOf(wallToRemove);
+
+            // Remove connections for the wall
+            ["start", "end"].forEach((point) => {
+              const key = `${wallIndex}-${point}`;
+              if (connections.has(key)) {
+                connections.delete(key);
+              }
+            });
+
+            walls = walls.filter((wall) => wall !== wallToRemove);
+            drawCanvas();
+          }
+        }
+      }
+
+      function addConnection(wall1, point1, wall2, point2) {
+        console.log(wall1, point1, wall2, point2);
+
+        const key1 = `${walls.indexOf(wall1)}-${point1}`;
+        const key2 = `${walls.indexOf(wall2)}-${point2}`;
+
+        console.log("Adding connection:", {
+          key1,
+          key2,
+          wall1Point: wall1[point1],
+          wall2Point: wall2[point2],
+        });
+
+        if (!connections.has(key1)) {
+          connections.set(key1, []);
+        }
+        if (!connections.has(key2)) {
+          connections.set(key2, []);
+        }
+
+        const exists = connections
+          .get(key1)
+          .some((conn) => conn.wall === wall2 && conn.point === point2);
+
+        if (!exists) {
+          connections.get(key1).push({ wall: wall2, point: point2 });
+          connections.get(key2).push({ wall: wall1, point: point1 });
+          console.log(
+            "Connection added. Current connections:",
+            Array.from(connections.entries())
+          );
+        }
+      }
+
+      function updateConnectedWalls(wall, dx, dy) {
+        if (processedWalls.has(wall)) {
+          return;
+        }
+
+        processedWalls.add(wall);
+        const wallIndex = walls.indexOf(wall);
+
+        ["start", "end"].forEach((point) => {
+          const key = `${wallIndex}-${point}`;
+          if (connections.has(key)) {
+            connections.get(key).forEach((connection) => {
+              // Update the connected point position
+              connection.wall[connection.point].x += dx;
+              connection.wall[connection.point].y += dy;
+              // Recursively update other connected walls
+              updateConnectedWalls(connection.wall, dx, dy);
+            });
+          }
+        });
+      }
+
+      function updateToolbarUI() {
+        document.querySelectorAll(".btn, .sidebar-btn").forEach((btn) => {
+          btn.classList.remove("active");
+        });
+
+        if (selectedTool === "wall") {
+          document.getElementById("wallToolSidebar").classList.add("active");
+        } else if (selectedTool === "remove") {
+          document.getElementById("removeWallSidebar").classList.add("active");
+        } else if (selectedTool === "move") {
+          document.getElementById("moveToolSidebar").classList.add("active");
+        }
+      }
+
+      function handleResetZoom() {
+        zoom = 1;
+        offset = { x: 0, y: 0 };
+        updateZoomDisplay();
+        drawCanvas();
+      }
+
+      function updateZoomDisplay() {
+        const zoomPercent = Math.round(zoom * 100);
+        document.getElementById("zoomLevel").textContent = `${zoomPercent}%`;
+        document.getElementById("resetZoom").style.display =
+          zoomPercent !== 100 ? "inline-flex" : "none";
+      }
+
+      function updateCursor() {
+        if (selectedTool === "move") {
+          canvas.style.cursor = isMovingWall ? "grabbing" : "grab";
+        } else if (selectedTool === "wall") {
+          canvas.style.cursor = "crosshair";
+        } else {
+          canvas.style.cursor = isDragging ? "grabbing" : "grab";
+        }
+      }
+
+      function drawCanvas() {
+        ctx.save();
+        ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+        ctx.translate(offset.x, offset.y);
+        ctx.scale(zoom, zoom);
+
+        // Draw grid
+        ctx.strokeStyle = "#e5e5e5";
+        ctx.lineWidth = 0.5;
+
+        const startX = -offset.x / zoom;
+        const startY = -offset.y / zoom;
+        const endX = (canvas.width - offset.x) / zoom;
+        const endY = (canvas.height - offset.y) / zoom;
+
+        for (
+          let x = Math.floor(startX / gridSize) * gridSize;
+          x <= endX;
+          x += gridSize
+        ) {
+          ctx.beginPath();
+          ctx.moveTo(x, startY);
+          ctx.lineTo(x, endY);
+          ctx.stroke();
+        }
+
+        for (
+          let y = Math.floor(startY / gridSize) * gridSize;
+          y <= endY;
+          y += gridSize
+        ) {
+          ctx.beginPath();
+          ctx.moveTo(startX, y);
+          ctx.lineTo(endX, y);
+          ctx.stroke();
+        }
+
+        // Draw walls
+        walls.forEach((wall) => {
+          ctx.strokeStyle = wall.color || "#000000";
+          ctx.lineWidth = wall.thickness || 2;
+          ctx.beginPath();
+          ctx.moveTo(wall.start.x, wall.start.y);
+          ctx.lineTo(wall.end.x, wall.end.y);
+          ctx.stroke();
+        });
+
+        // Draw current wall
+        if (currentWall) {
+          ctx.strokeStyle = "#000000";
+          ctx.lineWidth = 2;
+          ctx.beginPath();
+          ctx.moveTo(currentWall.start.x, currentWall.start.y);
+          ctx.lineTo(currentWall.end.x, currentWall.end.y);
+          ctx.stroke();
+        }
+
+        // Draw snap indicator when hovering over an endpoint
+        if (nearestEndpoint) {
+          drawSnapIndicator(nearestEndpoint);
+        }
+
+        ctx.restore();
+      }
+
+      function drawSnapIndicator(point) {
+        ctx.beginPath();
+        ctx.arc(point.x, point.y, 5 / zoom, 0, 2 * Math.PI);
+        ctx.fillStyle = "#3b82f6";
+        ctx.fill();
+        ctx.strokeStyle = "#ffffff";
+        ctx.lineWidth = 1 / zoom;
+        ctx.stroke();
+      }
+
+      function getCanvasPoint(clientX, clientY) {
+        const rect = canvas.getBoundingClientRect();
+        return {
+          x: (clientX - rect.left - offset.x) / zoom,
+          y: (clientY - rect.top - offset.y) / zoom,
+        };
+      }
+
+      function snapToGrid(point) {
+        if (isAltPressed) {
+          return {
+            x: Math.round(point.x / gridSize) * gridSize,
+            y: Math.round(point.y / gridSize) * gridSize,
+          };
+        }
+        return point;
+      }
+
+      function findNearestEndpoint(point) {
+        if (selectedTool !== "wall") return null;
+
+        let nearest = null;
+        let minDistance = ENDPOINT_SNAP_THRESHOLD;
+
+        walls.forEach((wall) => {
+          ["start", "end"].forEach((endpoint) => {
+            const dist = Math.sqrt(
+              Math.pow(wall[endpoint].x * zoom - point.x * zoom, 2) +
+                Math.pow(wall[endpoint].y * zoom - point.y * zoom, 2)
+            );
+
+            if (dist < minDistance) {
+              minDistance = dist;
+              nearest = wall[endpoint];
+            }
+          });
+        });
+
+        return nearest;
+      }
+
+      function findWallAtPoint(point) {
+        const threshold = 5;
+        return walls.find((wall) => {
+          const A = point;
+          const B = wall.start;
+          const C = wall.end;
+
+          const AB = Math.sqrt(Math.pow(B.x - A.x, 2) + Math.pow(B.y - A.y, 2));
+          const BC = Math.sqrt(Math.pow(C.x - B.x, 2) + Math.pow(C.y - B.y, 2));
+          const AC = Math.sqrt(Math.pow(C.x - A.x, 2) + Math.pow(C.y - A.y, 2));
+
+          if (AB > BC + AC) return false;
+          if (AC > AB + BC) return false;
+
+          const p = (AB + BC + AC) / 2;
+          const area = Math.sqrt(p * (p - AB) * (p - BC) * (p - AC));
+          const height = (2 * area) / BC;
+
+          return height < threshold;
+        });
+      }
+
+      function handleMouseDown(e) {
+        const point = getCanvasPoint(e.clientX, e.clientY);
+        nearestEndpoint = findNearestEndpoint(point);
+        console.log(nearestEndpoint);
+        lastMousePos = { x: e.clientX, y: e.clientY };
+
+        if (selectedTool === "remove") {
+          handleRemoveWall(e);
+          return;
+        }
+
+        if (selectedTool === "wall") {
+          isDrawing = true;
+          currentWall = {
+            start: nearestEndpoint || snapToGrid(point),
+            end: nearestEndpoint || snapToGrid(point),
+            color: "#000000",
+            thickness: 2,
+          };
+          // console.log(nearestEndpoint);
+          // if (nearestEndpoint) {
+          //   const connectedWall = walls.find(
+          //     (w) => w.start === nearestEndpoint || w.end === nearestEndpoint
+          //   );
+
+          //   if (connectedWall) {
+          //     const connectedPoint =
+          //       connectedWall.start === nearestEndpoint ? "start" : "end";
+          //     addConnection(
+          //       currentWall,
+          //       "start",
+          //       connectedWall,
+          //       connectedPoint
+          //     );
+          //   }
+          // }
+        } else if (selectedTool === "move") {
+          const wall = findWallAtPoint(point);
+          if (wall) {
+            selectedWall = wall;
+            isMovingWall = true;
+          }
+        } else {
+          const wall = findWallAtPoint(point);
+          if (wall) {
+            selectedWall = wall;
+            showWallProperties(wall);
+          } else {
+            selectedWall = null;
+            hideWallProperties();
+            isDragging = true;
+          }
+        }
+
+        updateCursor();
+        drawCanvas();
+      }
+
+      function moveConnectedPoint(wall, point, dx, dy) {
+        const key = `${walls.indexOf(wall)}-${point}`;
+        console.log("Moving connected point:", {
+          key,
+          hasConnection: connections.has(key),
+          wall: wall,
+          point: point,
+          dx,
+          dy,
+        });
+
+        if (connections.has(key)) {
+          connections.get(key).forEach((conn) => {
+            console.log("Updating connected wall:", {
+              wall: conn.wall,
+              point: conn.point,
+              beforePos: { ...conn.wall[conn.point] },
+            });
+
+            conn.wall[conn.point].x += dx;
+            conn.wall[conn.point].y += dy;
+
+            console.log("After update:", {
+              updatedPos: conn.wall[conn.point],
+            });
+          });
+        }
+      }
+
+      function handleMouseMove(e) {
+        const point = getCanvasPoint(e.clientX, e.clientY);
+        nearestEndpoint = findNearestEndpoint(point);
+
+        if (isDrawing && selectedTool === "wall") {
+          currentWall.end = nearestEndpoint || snapToGrid(point);
+        } else if (isMovingWall && selectedWall) {
+          const dx = (e.clientX - lastMousePos.x) / zoom;
+          const dy = (e.clientY - lastMousePos.y) / zoom;
+
+          // Clear the processed walls set before updating
+          processedWalls.clear();
+
+          // Update the selected wall position
+          selectedWall.start.x += dx;
+          selectedWall.start.y += dy;
+          selectedWall.end.x += dx;
+          selectedWall.end.y += dy;
+
+          // Update connected walls
+          moveConnectedPoint(selectedWall, "start", dx, dy);
+          moveConnectedPoint(selectedWall, "end", dx, dy);
+
+          lastMousePos = { x: e.clientX, y: e.clientY };
+        } else if (isDragging) {
+          const dx = e.clientX - lastMousePos.x;
+          const dy = e.clientY - lastMousePos.y;
+          offset.x += dx;
+          offset.y += dy;
+          lastMousePos = { x: e.clientX, y: e.clientY };
+        }
+
+        drawCanvas();
+      }
+
+      function handleMouseUp(e) {
+        if (isDrawing && currentWall) {
+          if (
+            currentWall.start.x !== currentWall.end.x ||
+            currentWall.start.y !== currentWall.end.y
+          ) {
+            const newWall = {
+              start: { ...currentWall.start },
+              end: { ...currentWall.end },
+              color: "#000000",
+              thickness: 2,
+            };
+            walls.push(newWall);
+            
+            // Add connection if wall was snapped to an endpoint
+            if (nearestEndpoint) {
+              const connectedWall = walls.find(
+                (w) =>
+                  (w.start === nearestEndpoint || w.end === nearestEndpoint) &&
+                  w !== newWall
+              );
+              if (connectedWall) {
+                const connectedPoint =
+                  connectedWall.start === nearestEndpoint ? "start" : "end";
+                const newWallPoint =
+                  currentWall.end === nearestEndpoint ? "end" : "start";
+                addConnection(
+                  newWall,
+                  newWallPoint,
+                  connectedWall,
+                  connectedPoint
+                );
+              }
+            }
+
+            //Add connection if the start of new Wall is equal to any other wall's start or end
+            if ( newWall.start) {
+              const connectedWall = walls.find(
+                (w) =>
+                  ((w.start.x === newWall.start.x &&
+                    w.start.y === newWall.start.y) ||
+                  (w.end.x === newWall.start.x && w.end.y === newWall.start.y))&&
+                  (((w.start.x===newWall.start.x && w.start.y===newWall.start.y)&&(w.end.x===newWall.end.x && w.end.y===newWall.end.y))==false)
+              );
+              
+
+              if (connectedWall) {
+                
+                const connectedPoint =
+                  connectedWall.start.x === newWall.start.x &&
+                  connectedWall.start.y === newWall.start.y
+                    ? "start"
+                    : "end";
+                addConnection(
+                  newWall, 
+                  "start", 
+                  connectedWall, connectedPoint);
+              }
+            }
+          }
+        }
+
+        currentWall = null;
+        isDrawing = false;
+        isDragging = false;
+        isMovingWall = false;
+        nearestEndpoint = null;
+
+        updateCursor();
+        drawCanvas();
+      }
+
+      function handleMouseLeave(e) {
+        if (isDrawing && currentWall) {
+          if (
+            currentWall.start.x !== currentWall.end.x ||
+            currentWall.start.y !== currentWall.end.y
+          ) {
+            walls.push({
+              start: { ...currentWall.start },
+              end: { ...currentWall.end },
+              color: "#000000",
+              thickness: 2,
+            });
+          }
+        }
+
+        currentWall = null;
+        isDrawing = false;
+        isDragging = false;
+        isMovingWall = false;
+        processedWalls.clear();
+
+        updateCursor();
+        drawCanvas();
+      }
+
+      function handleWheel(e) {
+        e.preventDefault();
+        const point = getCanvasPoint(e.clientX, e.clientY);
+        const factor = e.deltaY < 0 ? 1.1 : 0.9;
+
+        const newZoom = zoom * factor;
+        const constrainedZoom = Math.min(Math.max(newZoom, 0.1), 5);
+
+        const scale = constrainedZoom / zoom;
+        const dx = point.x * zoom * (1 - scale);
+        const dy = point.y * zoom * (1 - scale);
+
+        zoom = constrainedZoom;
+        offset.x += dx;
+        offset.y += dy;
+
+        updateZoomDisplay();
+        drawCanvas();
+      }
+
+      function handleZoom(factor) {
+        const center = {
+          x: canvas.width / 2,
+          y: canvas.height / 2,
+        };
+
+        const point = getCanvasPoint(center.x, center.y);
+        const newZoom = zoom * factor;
+        const constrainedZoom = Math.min(Math.max(newZoom, 0.1), 5);
+
+        const scale = constrainedZoom / zoom;
+        const dx = point.x * zoom * (1 - scale);
+        const dy = point.y * zoom * (1 - scale);
+
+        zoom = constrainedZoom;
+        offset.x += dx;
+        offset.y += dy;
+
+        updateZoomDisplay();
+        drawCanvas();
+      }
+
+      function showWallProperties(wall) {
+        document.getElementById("sidebarTitle").textContent = "Wall Properties";
+        document.getElementById("wallProperties").style.display = "block";
+
+        document.getElementById("startCoordsX").value = Math.round(
+          wall.start.x
+        );
+        document.getElementById("startCoordsY").value = Math.round(
+          wall.start.y
+        );
+        document.getElementById("endCoordsX").value = Math.round(wall.end.x);
+        document.getElementById("endCoordsY").value = Math.round(wall.end.y);
+
+        const length = Math.sqrt(
+          Math.pow(wall.end.x - wall.start.x, 2) +
+            Math.pow(wall.end.y - wall.start.y, 2)
+        ).toFixed(2);
+
+        document.getElementById("wallLength").value = `${length}px`;
+        document.getElementById("wallColor").value = wall.color || "#000000";
+        document.getElementById("wallThickness").value = wall.thickness || 2;
+      }
+
+      function hideWallProperties() {
+        document.getElementById("sidebarTitle").textContent = "";
+        document.getElementById("wallProperties").style.display = "none";
+      }
+
+      // Wall property event listeners
+      document.getElementById("startCoordsX").addEventListener("input", (e) => {
+        if (selectedWall) {
+          selectedWall.start.x =
+            parseInt(e.target.value) || selectedWall.start.x;
+          drawCanvas();
+        }
+      });
+
+      document.getElementById("startCoordsY").addEventListener("input", (e) => {
+        if (selectedWall) {
+          selectedWall.start.y =
+            parseInt(e.target.value) || selectedWall.start.y;
+          drawCanvas();
+        }
+      });
+
+      document.getElementById("endCoordsX").addEventListener("input", (e) => {
+        if (selectedWall) {
+          selectedWall.end.x = parseInt(e.target.value) || selectedWall.end.x;
+          drawCanvas();
+        }
+      });
+
+      document.getElementById("endCoordsY").addEventListener("input", (e) => {
+        if (selectedWall) {
+          selectedWall.end.y = parseInt(e.target.value) || selectedWall.end.y;
+          drawCanvas();
+        }
+      });
+
+      document.getElementById("wallColor").addEventListener("input", (e) => {
+        if (selectedWall) {
+          selectedWall.color = e.target.value;
+          drawCanvas();
+        }
+      });
+
+      // Initialize the UI
+      updateToolbarUI();
+      updateZoomDisplay();
+      resizeCanvas();
+    </script>
+  </body>
+</html>
